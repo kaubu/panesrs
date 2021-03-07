@@ -39,7 +39,7 @@ enum AccountType {
 	System,
 	Admin,
 	User,
-	None // Guests
+	Guest
 }
 
 struct AccountDatabase {
