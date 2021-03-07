@@ -1,0 +1,16 @@
+[package]
+name = "panes"
+version = "0.1.0"
+authors = ["https://github.com/kaubu"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-argon2 = "0.8"
+ring = "0.16.20"
+data-encoding = "2.3.2"
+phf = { version = "0.8.0", features = ["macros"] }
+chrono = "0.4.19"
+serde = { version = "1.0.124", features = ["derive"] }
+serde_json = "1.0.64"
