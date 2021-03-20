@@ -1,6 +1,5 @@
 use crate::{
 	ACCOUNT_DATABASE_PATH,
-	input,
 	password::{self, is_password}
 };
 
@@ -48,6 +47,13 @@ pub struct AccountDatabase {
 }
 
 impl AccountDatabase {
+	pub fn load(load_accounts: HashMap<String, Account>, load_path: &'static str) -> AccountDatabase {
+		AccountDatabase {
+			accounts: load_accounts,
+			path: load_path
+		}
+	}
+	
 	pub fn add(&mut self, account: Account) {
 		self.accounts.insert(
 			account.username.clone(),
@@ -113,23 +119,28 @@ impl AccountDatabase {
 	// Change to save to a file
 	pub fn save_database(&mut self) {
 		let accounts = serde_json::to_string(&self.accounts).unwrap();
-		// println!("{:?}\n", &v);
-		// v
 		crate::file::write_file(ACCOUNT_DATABASE_PATH.to_string(), accounts);
 	}
 
 	pub fn verify_login(&mut self, username: String, password: String) -> bool {
 		// Check if the username doesn't exist
 		if let false = self.accounts.contains_key(&username) {
-			println!("system: The current username doesn't exist");
+			// Use this so as not to give any hints away
+			println!("system: The username or password is incorrect");
 			return false;
 		};
 
 		let account: Account = self.get_account(&username).unwrap();
-		is_password(account.password, password)
+		match is_password(account.password, password) {
+			true => true,
+			false => {
+				println!("system: The username or password is incorrect");
+				false
+			}
+		}
 	}
 }
 
 pub fn load_accounts(path: String) -> HashMap<String, Account> {
-	serde_json::from_str(&crate::file::read_file_to_string(ACCOUNT_DATABASE_PATH.to_string())).unwrap()
+	serde_json::from_str(&crate::file::read_file_to_string(path.to_string())).unwrap()
 }

@@ -4,16 +4,19 @@
 use phf::phf_map;
 use chrono::prelude::*;
 use std::{
-	collections::HashMap, 
-	io::{self, Write}
+	collections::HashMap,
+	io::{self, Write},
+	fs,
+	path::PathBuf
 };
 
 mod password;
 mod account;
 mod file;
+mod commands;
 
 // OS Variables
-pub const VERSION: &str = "0.1.1";
+pub const VERSION: &str = "0.2.0";
 pub const AUTHOR: &str = "kaubu";
 pub const SOURCE_CODE: &str = "https://github.com/kaubu";
 pub const OS_NAME: &str = "Panes";
@@ -40,7 +43,11 @@ pub const HIDDEN_FILE_TYPES: [&'static str; 4] = [ // Change length to number of
 // File and directory metadata should be added to the file, in the future
 
 // Check if the user is trying to create a file ending with this
-pub const SYSTEM_ONLY_FILE_TYPES: [&'static str; 3] = ["psys", "fmtd", "dmtd"];
+pub const SYSTEM_ONLY_FILE_TYPES: [&'static str; 3] = [
+	"psys",
+	"fmtd",
+	"dmtd"
+];
 
 pub const FILE_ACCOUNT_PERMISSIONS: phf::Map<&'static str, i8> = phf_map!{
 	// "SYSTEM" => -1,
@@ -96,40 +103,65 @@ fn create_panes_dir() {
 	};
 }
 
+fn get_absolute_path(path: &str) -> String {
+	let srcdir = PathBuf::from(path);
+	format!("{:?}", fs::canonicalize(&srcdir).unwrap())
+}
+
 fn main() {
-	// Creates all directories that Panes needs, such as the /panes/ and the /panes/users/ directory
 	create_panes_dir();
 
-	// Initial setup
-	println!("Create an account.");
-	let current_user: String = input("Username: ");
-	let password: String = input("Password: ");
+	if file::check_file_or_dir_exists(ACCOUNT_DATABASE_PATH) {
+		// Load database if it exists
+		let mut account_database: account::AccountDatabase = account::AccountDatabase::load(
+			account::load_accounts(String::from(ACCOUNT_DATABASE_PATH)),
+			ACCOUNT_DATABASE_PATH
+		);
 
-	let new_acc: account::Account = account::Account::new(
-		current_user.clone(),
-		password,
-		account::AccountType::Admin
-	);
+		println!("Log into an account.");
+		// Log in loop
+		loop {
+			let username_attempt: String = input("Username: ");
+			let password_attempt: String = input("Password: ");
 
-	let mut account_database: account::AccountDatabase = account::AccountDatabase{
-		accounts: HashMap::new(),
-	    path: ACCOUNT_DATABASE_PATH,
-	};
+			match account_database.verify_login(username_attempt.clone(), password_attempt) {
+				true => {
+					println!("Welcome {}!", account_database.get_account(&username_attempt).unwrap().username);
+					break
+				},
+				false => continue,
+			}
+		}
+	} else {
+		// Initial setup IF /panes/account.psys doesn't exist
+		println!("Create an account.");
+		let current_user: String = input("Username: ");
+		let password: String = input("Password: ");
 
-	account_database.add(new_acc);
-	account_database.save_database();
+		let new_acc: account::Account = account::Account::new(
+			current_user.clone(),
+			password,
+			account::AccountType::Admin
+		);
+
+		let mut account_database: account::AccountDatabase = account::AccountDatabase{
+			accounts: HashMap::new(),
+			path: ACCOUNT_DATABASE_PATH,
+		};
+
+		account_database.add(new_acc);
+		account_database.save_database();
+	}
 	
-	let current_directory: &str = "panes/";
+	let display_directory: &str = "panes/";
+	let relative_directory: &str = "\\panes\\";
+	let absolute_directory: String = get_absolute_path("./panes/"); // True directory, that will be appended to the current one
 
 	// Main command checking loop
 	loop {
-		let cursor: String = [current_directory, CURSOR].concat();
+		let cursor: String = [display_directory, CURSOR].concat();
 		let command: String = input(&cursor);
 
-		if command == "quit".to_string() {
-			break;
-		}
-		
-		println!("{}", command); // Delete this
+		commands::check_command(command);
 	}
 }

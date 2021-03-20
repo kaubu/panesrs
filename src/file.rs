@@ -1,4 +1,7 @@
-use std::fs;
+use std::{
+	fs,
+	path::Path
+};
 
 pub fn create_dir(path: String) -> std::io::Result<()> {
 	fs::create_dir_all(path)?;
@@ -11,4 +14,8 @@ pub fn read_file_to_string(path: String) -> String {
 
 pub fn write_file(path: String, contents: String) {
 	fs::write(path, contents).expect("system: Error writing to file");
+}
+
+pub fn check_file_or_dir_exists(path: &str) -> bool {
+	Path::new(path).exists()
 }
