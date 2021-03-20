@@ -1,5 +1,5 @@
 # PanesOS v0.1.1
-Currently, nothing happens. That is because it hasn't reach v1.0 yet.
+Currently, nothing *really* happens. That is because it hasn't reach v1.0 yet.
 
 ## Changelog
 ### v0.1.1
