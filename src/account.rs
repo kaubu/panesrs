@@ -8,13 +8,13 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Account {
-	username: String,
-	password: String,
+pub struct Account {
+	pub username: String,
+	pub password: String,
 	created: String,
 	username_modified: Vec<String>,
 	password_modified: Vec<String>,
-	account_type: AccountType,
+	pub account_type: AccountType,
 }
 
 impl Account {
@@ -35,16 +35,16 @@ impl Account {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-enum AccountType {
+pub enum AccountType {
 	System,
 	Admin,
 	User,
 	Guest
 }
 
-struct AccountDatabase {
-	accounts: HashMap<String, Account>,
-	path: &'static str
+pub struct AccountDatabase {
+	pub accounts: HashMap<String, Account>,
+	pub path: &'static str
 }
 
 impl AccountDatabase {
@@ -130,6 +130,6 @@ impl AccountDatabase {
 	}
 }
 
-fn load_accounts(path: String) -> HashMap<String, Account> {
+pub fn load_accounts(path: String) -> HashMap<String, Account> {
 	serde_json::from_str(&crate::file::read_file_to_string(ACCOUNT_DATABASE_PATH.to_string())).unwrap()
 }

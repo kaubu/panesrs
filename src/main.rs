@@ -3,14 +3,17 @@
 
 use phf::phf_map;
 use chrono::prelude::*;
-use std::{io::{self, Write}};
+use std::{
+	collections::HashMap, 
+	io::{self, Write}
+};
 
 mod password;
 mod account;
 mod file;
 
 // OS Variables
-pub const VERSION: &str = "0.1.0";
+pub const VERSION: &str = "0.1.1";
 pub const AUTHOR: &str = "kaubu";
 pub const SOURCE_CODE: &str = "https://github.com/kaubu";
 pub const OS_NAME: &str = "Panes";
@@ -32,7 +35,9 @@ pub const HIDDEN_FILE_TYPES: [&'static str; 4] = [ // Change length to number of
 	"fmtd", // File metadata file
 	"dmtd", // Directory metadata file
 	"hd" // User created hidden file
-]; // File and directory metadata should be added to the file, in the future
+];
+
+// File and directory metadata should be added to the file, in the future
 
 // Check if the user is trying to create a file ending with this
 pub const SYSTEM_ONLY_FILE_TYPES: [&'static str; 3] = ["psys", "fmtd", "dmtd"];
@@ -64,7 +69,7 @@ pub fn clear_screen() {
 }
 
 fn input(message: &str) -> String {
-	let mut input = String::new();
+	let mut input: String = String::new();
 
 	print!("{}", &message);
 	io::stdout().flush().unwrap();
@@ -82,17 +87,49 @@ fn create_panes_dir() {
 			println!("system: Error when creating ./panes/ directory");
 		}
 	};
+
+	match file::create_dir(USERS_PATH.to_string()) {
+		Ok(_) => {},
+		Err(_) => {
+			println!("system: Error when creating ./panes/users/ directory");
+		}
+	};
 }
 
 fn main() {
+	// Creates all directories that Panes needs, such as the /panes/ and the /panes/users/ directory
 	create_panes_dir();
-	// account::test();
+
+	// Initial setup
+	println!("Create an account.");
+	let current_user: String = input("Username: ");
+	let password: String = input("Password: ");
+
+	let new_acc: account::Account = account::Account::new(
+		current_user.clone(),
+		password,
+		account::AccountType::Admin
+	);
+
+	let mut account_database: account::AccountDatabase = account::AccountDatabase{
+		accounts: HashMap::new(),
+	    path: ACCOUNT_DATABASE_PATH,
+	};
+
+	account_database.add(new_acc);
+	account_database.save_database();
 	
 	let current_directory: &str = "panes/";
 
+	// Main command checking loop
 	loop {
-		let cursor = [current_directory, CURSOR].concat();
+		let cursor: String = [current_directory, CURSOR].concat();
 		let command: String = input(&cursor);
-		println!("{}", command);
+
+		if command == "quit".to_string() {
+			break;
+		}
+		
+		println!("{}", command); // Delete this
 	}
 }
