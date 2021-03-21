@@ -1,66 +1,21 @@
 // Panes main file
 // Created by https://github.com/kaubu
 
-use phf::phf_map;
 use chrono::prelude::*;
 use std::{
 	collections::HashMap,
-	io::{self, Write},
 	fs,
-	path::PathBuf
+	io::{self, Write},
+	path::PathBuf,
+	// thread::current,
+	process::Command,
 };
 
 mod password;
 mod account;
 mod file;
 mod commands;
-
-// OS Variables
-pub const VERSION: &str = "0.2.0";
-pub const AUTHOR: &str = "kaubu";
-pub const SOURCE_CODE: &str = "https://github.com/kaubu";
-pub const OS_NAME: &str = "Panes";
-pub const CURSOR: &str = "> ";
-
-// Directory paths
-pub const ROOT_PATH: &str = "./";
-pub const PANES_PATH: &str = "./panes/";
-
-pub const USERS_PATH: &str = "./panes/users/";
-
-// File paths
-pub const ACCOUNT_DATABASE_PATH: &str = "./panes/account.psys";
-pub const LOCAL_AUTHENTICATION_PATH: &str = "./panes/auth.psys";
-
-// Files
-pub const HIDDEN_FILE_TYPES: [&'static str; 4] = [ // Change length to number of items in array
-	"psys", // Panes system file
-	"fmtd", // File metadata file
-	"dmtd", // Directory metadata file
-	"hd" // User created hidden file
-];
-
-// File and directory metadata should be added to the file, in the future
-
-// Check if the user is trying to create a file ending with this
-pub const SYSTEM_ONLY_FILE_TYPES: [&'static str; 3] = [
-	"psys",
-	"fmtd",
-	"dmtd"
-];
-
-pub const FILE_ACCOUNT_PERMISSIONS: phf::Map<&'static str, i8> = phf_map!{
-	// "SYSTEM" => -1,
-	"NONE" => 0,
-	"READ_ONLY" => 1,
-	// "WRITE_ONLY" => 2,
-	"FULL" => 2
-};
-
-pub const DEFAULT_USER_PERMISSIONS: phf::Map<&'static str, i8> = phf_map!{
-	"USER" => 0, // NONE
-	"GUEST" => 0
-};
+mod consts;
 
 // Functions
 pub fn get_date_and_time_now() -> DateTime<Local> {
@@ -88,14 +43,14 @@ fn input(message: &str) -> String {
 
 fn create_panes_dir() {
 	// Creates the panes directory in case it wasn't there already
-	match file::create_dir(PANES_PATH.to_string()) {
+	match file::create_dir(consts::PANES_PATH.to_string()) {
 		Ok(_) => {},
 		Err(_) => {
 			println!("system: Error when creating ./panes/ directory");
 		}
 	};
 
-	match file::create_dir(USERS_PATH.to_string()) {
+	match file::create_dir(consts::USERS_PATH.to_string()) {
 		Ok(_) => {},
 		Err(_) => {
 			println!("system: Error when creating ./panes/users/ directory");
@@ -108,14 +63,14 @@ fn get_absolute_path(path: &str) -> String {
 	format!("{:?}", fs::canonicalize(&srcdir).unwrap())
 }
 
-fn main() {
-	create_panes_dir();
-
-	if file::check_file_or_dir_exists(ACCOUNT_DATABASE_PATH) {
+fn prelude_authentication() -> (String, account::AccountDatabase) { // HashMap<String, account::AccountDatabase>
+	let current_user: String;
+	
+	if file::check_file_or_dir_exists(consts::ACCOUNT_DATABASE_PATH) {
 		// Load database if it exists
 		let mut account_database: account::AccountDatabase = account::AccountDatabase::load(
-			account::load_accounts(String::from(ACCOUNT_DATABASE_PATH)),
-			ACCOUNT_DATABASE_PATH
+			account::load_accounts(String::from(consts::ACCOUNT_DATABASE_PATH)),
+			consts::ACCOUNT_DATABASE_PATH
 		);
 
 		println!("Log into an account.");
@@ -127,11 +82,17 @@ fn main() {
 			match account_database.verify_login(username_attempt.clone(), password_attempt) {
 				true => {
 					println!("Welcome {}!", account_database.get_account(&username_attempt).unwrap().username);
+					current_user = username_attempt.clone();
 					break
 				},
 				false => continue,
 			}
 		}
+		// let mut return_users = HashMap::new();
+		// return_users.insert(current_user, account_database);
+		// return_users
+		(current_user, account_database)
+		// TODO, if the user folder isn't already created, create it
 	} else {
 		// Initial setup IF /panes/account.psys doesn't exist
 		println!("Create an account.");
@@ -146,12 +107,35 @@ fn main() {
 
 		let mut account_database: account::AccountDatabase = account::AccountDatabase{
 			accounts: HashMap::new(),
-			path: ACCOUNT_DATABASE_PATH,
+			path: consts::ACCOUNT_DATABASE_PATH,
 		};
 
 		account_database.add(new_acc);
 		account_database.save_database();
+		// let mut return_users = HashMap::new();
+		// return_users.insert(current_user, account_database);
+		// return_users
+		(current_user, account_database)
+		// TODO, create user folder with the name of the created username
 	}
+}
+
+fn prelude() {
+	// Set the title of the window like OG PanesOS, but only on windows, since there isn't a command for linux that was build-in
+	if cfg!(target_os = "windows") {
+		Command::new("cmd")
+			.args(&["/C", "title", consts::OS_NAME, consts::VERSION])
+			.output()
+			.expect("system: Failed to change window title");
+	}
+
+	// Create folders needed
+	create_panes_dir();
+}
+
+fn main() {
+	prelude(); // Do all of the setting up before the main loop
+	let (current_user, account_database) = prelude_authentication();
 	
 	let display_directory: &str = "panes/";
 	let relative_directory: &str = "\\panes\\";
@@ -159,7 +143,7 @@ fn main() {
 
 	// Main command checking loop
 	loop {
-		let cursor: String = [display_directory, CURSOR].concat();
+		let cursor: String = format!("{}: {}", current_user, [display_directory, consts::CURSOR].concat());
 		let command: String = input(&cursor);
 
 		commands::check_command(command);

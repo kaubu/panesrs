@@ -1,5 +1,5 @@
 pub fn help() {
-	println!("quit (exit) - Shuts down Panes.");
+	println!("quit (exit/q) - Shuts down Panes.");
 }
 
 pub fn run() {

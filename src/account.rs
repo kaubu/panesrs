@@ -1,5 +1,5 @@
 use crate::{
-	ACCOUNT_DATABASE_PATH,
+	consts::ACCOUNT_DATABASE_PATH,
 	password::{self, is_password}
 };
 
@@ -142,5 +142,9 @@ impl AccountDatabase {
 }
 
 pub fn load_accounts(path: String) -> HashMap<String, Account> {
+	// Check for error, if error, print out that the file is corrupted
+	// E.g.
+	// 	thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error("EOF while parsing a value", line: 1, column: 0)', src\account.rs:145:79
+	// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 	serde_json::from_str(&crate::file::read_file_to_string(path.to_string())).unwrap()
 }

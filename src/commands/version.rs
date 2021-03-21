@@ -3,5 +3,5 @@ pub fn help() {
 }
 
 pub fn run() {
-	println!("PanesOS, version {}/{}\nWritten by https://github.com/kaubu", option_env!("CARGO_PKG_VERSION").unwrap(), crate::VERSION);
+	println!("PanesOS, version {}/{}\nWritten by https://github.com/kaubu", option_env!("CARGO_PKG_VERSION").unwrap(), crate::consts::VERSION);
 }

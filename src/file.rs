@@ -1,3 +1,4 @@
+// Might get rid of this file, as it doesn't really serve a purpose as fs seems to be a pretty simple library
 use std::{
 	fs,
 	path::Path

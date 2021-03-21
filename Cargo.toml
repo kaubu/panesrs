@@ -1,6 +1,6 @@
 [package]
 name = "panes"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["https://github.com/kaubu"]
 edition = "2018"
 
@@ -14,3 +14,4 @@ phf = { version = "0.8.0", features = ["macros"] }
 chrono = "0.4.19"
 serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0.64"
+glob = "0.3.0"
