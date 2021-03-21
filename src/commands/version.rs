@@ -1,5 +1,5 @@
 pub fn help() {
-	println!("version (v) - Displays the current version of Panes.");
+	println!("version (v/ver) - Displays the current version of Panes.");
 }
 
 pub fn run() {

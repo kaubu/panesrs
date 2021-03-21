@@ -19,7 +19,7 @@ pub fn check_command(cmd: String) {
 	match args[0] {
 		"quit" | "exit" | "q" => quit::run(),
 		"help" => help_commands(),
-		"version" | "v" => version::run(),
+		"version" | "v" | "ver" => version::run(),
 		_ => println!("Unknown command. Do 'help' for a list of commands.")
 	}
 }
