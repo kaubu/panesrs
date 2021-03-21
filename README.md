@@ -3,6 +3,10 @@ Panes was originally written in Python, and the source code is available [here](
 Currently, nothing *really* happens. That is because it hasn't reached v1.0 yet.
 
 ## Changelog
+### v0.2.1
+* Added the username next to the cursor
+* Added more aliases for commands
+* Changed the title of the terminal on Windows machines
 ### v0.2.0
 * Added check for an existing user database, if so login using those credentials
 * Added more commands, and sorted them in a pseudo-modular fashion
